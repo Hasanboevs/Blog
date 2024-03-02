@@ -1,8 +1,11 @@
 ﻿using Infinite_Skunome.Data;
 using Infinite_Skunome.Models;
+using Infinite_Skunome.Utilites;
 using Microsoft.AspNetCore.Identity;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Infinite_Skunome.Utilites
+namespace Infinite_Skunome.Utilities
 {
 	public class DbInitializer : IDbInitializer
 	{
@@ -17,19 +20,33 @@ namespace Infinite_Skunome.Utilites
 			_roleManager = roleManager;
 		}
 
-		public void Initialize()
+		public async Task Initialize()
 		{
-			if (!_roleManager.RoleExistsAsync(WebsiteRoles.WebsiteAdmin).GetAwaiter().GetResult())
+			await EnsureRolesAsync();
+
+			List<Page> ListOfPages = new List<Page>()
 			{
-				_roleManager.CreateAsync(new IdentityRole(WebsiteRoles.WebsiteAdmin)).GetAwaiter();
-				_roleManager.CreateAsync(new IdentityRole(WebsiteRoles.WebsiteAuthor)).GetAwaiter();
-				_roleManager.CreateAsync(new IdentityRole()
-				{
-					UserName = "user",
-					Email = "user@gmail.com",
-					Name = "Yusuf"
-				});
+			new Page {Title = "About Us", Slug = "about"},
+			new Page {Title = "Contact Us", Slug = "contact"},
+			new Page {Title = "Privacy Plociy", Slug = "privacy-policy" }
+			};
+
+			_db.Pages.AddRange(ListOfPages);
+
+		}
+
+		private async Task EnsureRolesAsync()
+		{
+			if (!await _roleManager.RoleExistsAsync(WebsiteRoles.WebsiteAdmin))
+			{
+				await _roleManager.CreateAsync(new IdentityRole(WebsiteRoles.WebsiteAdmin));
+			}
+
+			if (!await _roleManager.RoleExistsAsync(WebsiteRoles.WebsiteAuthor))
+			{
+				await _roleManager.CreateAsync(new IdentityRole(WebsiteRoles.WebsiteAuthor));
 			}
 		}
+
 	}
 }
